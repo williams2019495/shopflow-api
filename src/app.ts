@@ -1,6 +1,7 @@
 import express from "express";
 import { orderRoutes } from "./routes/orders.js";
 import { productRoutes } from "./routes/products.js";
+import { cors } from "./middleware/web.js";
 
 export function createApp() {
   const app = express();
@@ -8,5 +9,6 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
   app.use("/products", productRoutes);
   app.use("/orders", orderRoutes);
+  app.use(cors);
   return app;
 }
