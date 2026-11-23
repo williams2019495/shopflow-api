@@ -14,7 +14,7 @@ describe("orders", () => {
   it("creates an order and takes the stock", async () => {
     const res = await request(app)
       .post("/orders")
-      .send({ customerId: "cus_00006", lines: [{ productId: "prod_00001", quantity: 2 }] });
+      .send({ customerId: "cus_00006", couponCodes: [], lines: [{ productId: "prod_00001", quantity: 2 }] });
     expect(res.status).toBe(201);
     expect(res.body.totalCents).toBe(2800);
     expect(products.get("prod_00001")!.stock).toBe(38);

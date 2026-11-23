@@ -2,13 +2,13 @@ import { Router } from "express";
 import { z } from "zod";
 import { customers, newId, orders, products, type Order } from "../store.js";
 import { OutOfStockError, UnknownProductError, release, reserve } from "../services/inventory.js";
-import { totals } from "../services/pricing.js";
+import { stackedTotals } from "../services/coupons.js";
 
 export const orderRoutes = Router();
 
 const CreateOrder = z.object({
   customerId: z.string(),
-  couponCode: z.string().optional(),
+  couponCodes: z.array(z.string()).default([]),
   lines: z
     .array(z.object({ productId: z.string(), quantity: z.number().int().positive().max(50) }))
     .min(1),
@@ -17,7 +17,7 @@ const CreateOrder = z.object({
 orderRoutes.post("/", (req, res) => {
   const parsed = CreateOrder.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "invalid_order", issues: parsed.error.issues });
-  const { customerId, couponCode, lines } = parsed.data;
+  const { customerId, couponCodes, lines } = parsed.data;
   if (!customers.has(customerId)) return res.status(404).json({ error: "unknown_customer" });
 
   try {
@@ -33,7 +33,7 @@ orderRoutes.post("/", (req, res) => {
     id: newId("ord"),
     customerId,
     lines: priced,
-    ...totals(priced, couponCode),
+    ...stackedTotals(priced, couponCodes),
     status: "pending",
     createdAt: new Date().toISOString(),
   };
